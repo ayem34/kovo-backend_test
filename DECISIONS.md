@@ -67,6 +67,23 @@ natives de Pydantic, sans `exceptions.py` dédié.
 **Justification** : principe YAGNI — introduire une hiérarchie d'exceptions métier avant
 d'en avoir un besoin concret serait de la sur-ingénierie pour ce scope.
 
+## D10 — Colonne `updated_at` ajoutée bien que non strictement demandée
+**Décision** : la table `users` inclut `updated_at`, en plus des colonnes strictement
+exigées par le sujet (`id`, `email`, `full_name`, `hashed_password`).
+**Justification** : le sujet ne demande pas explicitement de tracer les modifications, mais
+`PUT /api/profile` modifie réellement des données. Coût d'implémentation nul, pratique standard,
+et directement justifiable si questionné — donc conservée en connaissance de cause plutôt
+qu'ajoutée par réflexe non questionné.
+
+## D11 — `updated_at` initialisée à `created_at` plutôt que `NULL`
+**Décision** : `updated_at` est `NOT NULL`, avec `server_default=func.now()` ET
+`onupdate=func.now()`. À la création, `created_at == updated_at`. Ce n'est qu'après une
+première modification que les deux valeurs divergent.
+**Justification** : évite d'introduire un `Optional[datetime]` qui se propagerait dans le
+schéma Pydantic (`UserOut`), les tests, et tout consommateur de l'API. C'est aussi la
+convention par défaut de la plupart des ORMs (ActiveRecord, Django, Laravel) — cohérence
+avec l'écosystème plutôt que sémantique "NULL = jamais modifié" plus rare en pratique.
+
 ---
 
 *(Ce fichier sera complété à chaque étape du projet.)*
