@@ -1,7 +1,20 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+
+
+def _validate_full_name(value: str) -> str:
+    """
+    Règle partagée par UserCreate et UserUpdate : après suppression des
+    espaces en début/fin, le nom ne doit pas être vide. Sans ça,
+    " " (uniquement des espaces) passerait la contrainte min_length=1
+    de Pydantic, qui compte les espaces comme des caractères valides.
+    """
+    stripped = value.strip()
+    if not stripped:
+        raise ValueError("Le nom ne peut pas être vide ou ne contenir que des espaces.")
+    return stripped
 
 
 class UserCreate(BaseModel):
@@ -13,6 +26,8 @@ class UserCreate(BaseModel):
     # on préfère rejeter explicitement plutôt que laisser un mot de passe
     # partiellement ignoré sans que l'utilisateur le sache.
     password: str = Field(min_length=8, max_length=72)
+
+    _normalize_full_name = field_validator("full_name")(_validate_full_name)
 
 
 class UserLogin(BaseModel):
@@ -35,6 +50,8 @@ class UserUpdate(BaseModel):
     """
 
     full_name: str = Field(min_length=1, max_length=255)
+
+    _normalize_full_name = field_validator("full_name")(_validate_full_name)
 
 
 class Token(BaseModel):
