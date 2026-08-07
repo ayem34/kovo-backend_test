@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.modules.users.repository import UserRepository
-from app.modules.users.schema import UserCreate, UserOut
+from app.modules.users.schema import UserCreate, UserLogin, UserOut, Token
 from app.modules.users import service
 
 router = APIRouter(prefix="/api", tags=["users"])
@@ -19,3 +19,13 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
     """
     repository = UserRepository(db)
     return service.register_user(data, repository)
+
+
+@router.post("/login", response_model=Token)
+def login(data: UserLogin, db: Session = Depends(get_db)):
+    """Vérifie les identifiants et renvoie un JWT (décision D1 : register
+    ne connecte pas automatiquement, cette route est le seul moyen
+    d'obtenir un token)."""
+    repository = UserRepository(db)
+    access_token = service.login_user(data, repository)
+    return Token(access_token=access_token)

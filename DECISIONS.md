@@ -84,6 +84,49 @@ schéma Pydantic (`UserOut`), les tests, et tout consommateur de l'API. C'est au
 convention par défaut de la plupart des ORMs (ActiveRecord, Django, Laravel) — cohérence
 avec l'écosystème plutôt que sémantique "NULL = jamais modifié" plus rare en pratique.
 
+## D12 — Driver PostgreSQL : psycopg3 plutôt que psycopg2
+**Décision** : le projet utilise `psycopg[binary]` (psycopg 3.x) au lieu de `psycopg2-binary`,
+initialement prévu.
+**Justification** : `psycopg2` est en mode maintenance depuis plusieurs années ; `psycopg3` est
+le driver officiellement recommandé pour les nouveaux projets SQLAlchemy 2.0. Le changement a
+été déclenché par un bug d'encodage connu des wheels Windows de `psycopg2` (UnicodeDecodeError
+lors de la négociation de connexion sur certains systèmes non-anglophones), mais reste un choix
+justifié indépendamment de ce bug : implémentation plus moderne, activement maintenue, meilleure
+compatibilité multiplateforme.
+
+## D12 — Driver PostgreSQL : psycopg3 plutôt que psycopg2
+**Décision** : le projet utilise `psycopg[binary]` (psycopg3) au lieu de `psycopg2-binary`,
+initialement prévu dans le choix de stack.
+**Justification** : bug non résolu et documenté (fermé "not planned" par les mainteneurs) de
+`psycopg2` sur Windows, provoquant un `UnicodeDecodeError` lors de la connexion selon la
+configuration locale du système. `psycopg2` est aujourd'hui en mode maintenance uniquement ;
+`psycopg` (psycopg3) est la version activement développée et recommandée par l'écosystème
+PostgreSQL/Python. Le changement se limite au préfixe `postgresql+psycopg://` dans
+`DATABASE_URL` et à `requirements.txt` — aucune ligne de code applicatif n'a dû être modifiée,
+ce qui valide a posteriori la séparation en couches (le driver est un détail d'infrastructure
+isolé derrière SQLAlchemy).
+
+## D13 — Pas de règle de complexité forcée sur le mot de passe
+**Décision** : le mot de passe est contraint uniquement en longueur (8 à 72 caractères),
+sans exigence de majuscule, chiffre, ou caractère spécial.
+**Justification** : les recommandations modernes de sécurité (NIST SP 800-63B, OWASP)
+déconseillent les règles de complexité forcée, qui poussent les utilisateurs vers des mots
+de passe prévisibles (ex: "Password1!") et encouragent la réutilisation de variantes entre
+plusieurs sites. La longueur est le facteur le plus déterminant contre une attaque par force
+brute, pas la composition en catégories de caractères. Ce choix reste assumé et documenté
+plutôt qu'un oubli.
+
+## D14 — Limite connue : timing attack théorique sur /login
+**Décision** : pas de correctif appliqué contre les attaques par mesure de temps de réponse
+(timing attack) sur l'endpoint login.
+**Justification** : quand l'email n'existe pas, la fonction retourne immédiatement sans
+appeler `verify_password` (qui prend un temps mesurable à cause du coût volontaire de bcrypt).
+Un attaquant très minutieux pourrait théoriquement mesurer cette différence de temps de
+réponse pour déduire si un email existe en base, malgré le message d'erreur identique.
+Corriger ça nécessiterait un appel factice à bcrypt même quand l'utilisateur n'existe pas —
+complexité jugée disproportionnée pour ce test technique. Limite connue et assumée plutôt
+qu'un oubli.
+
 ---
 
 *(Ce fichier sera complété à chaque étape du projet.)*

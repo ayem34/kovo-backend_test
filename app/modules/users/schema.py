@@ -37,6 +37,13 @@ class UserUpdate(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
 
 
+class Token(BaseModel):
+    """Réponse renvoyée par POST /api/login."""
+
+    access_token: str
+    token_type: str = "bearer"
+
+
 class UserOut(BaseModel):
     """
     Représentation d'un utilisateur renvoyée par l'API.
