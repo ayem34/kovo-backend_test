@@ -4,7 +4,7 @@ from app.core.jwt import create_access_token
 from app.core.password import hash_password, verify_password
 from app.modules.users.model import User
 from app.modules.users.repository import UserRepository
-from app.modules.users.schema import UserCreate, UserLogin
+from app.modules.users.schema import UserCreate, UserLogin, UserUpdate
 
 
 def register_user(data: UserCreate, repository: UserRepository) -> User:
@@ -16,6 +16,7 @@ def register_user(data: UserCreate, repository: UserRepository) -> User:
     if existing is not None:
         # 409 Conflict : le client a envoyé une requête valide dans sa
         # forme, mais elle entre en conflit avec l'état actuel du serveur.
+        # C'est plus précis qu'un 400 générique.
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Un compte existe déjà avec cet email.",
@@ -46,3 +47,14 @@ def login_user(data: UserLogin, repository: UserRepository) -> str:
         )
 
     return create_access_token(user.id)
+
+
+def update_profile(user: User, data: UserUpdate, repository: UserRepository) -> User:
+    """
+    Règle métier de la mise à jour du profil (décisions D3/D4 : seul
+    full_name est modifiable, ni email ni password via cette route).
+    `user` est déjà authentifié et résolu par get_current_user en amont -
+    ce service ne fait que modifier son full_name, jamais celui d'un tiers.
+    """
+    user.full_name = data.full_name
+    return repository.update(user)
