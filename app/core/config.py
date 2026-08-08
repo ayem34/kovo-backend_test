@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     """
     Configuration centralisée de l'application, lue depuis les variables
     d'environnement (fichier .env en local, variables d'env réelles en
-    production). 
+    production). Aucun secret n'est jamais codé en dur dans le code.
     """
 
     database_url: str

@@ -25,6 +25,7 @@ derrière chaque décision, pas seulement le "quoi".
 | D17 | JWT minimal |
 | D18 | bcrypt |
 | D19 | FastAPI |
+| D20 | Docker et docker-compose |
 
 ---
 
@@ -160,6 +161,17 @@ des performances comparables aux frameworks asynchrones les plus rapides du marc
 REST de 4 endpoints) ou Flask (plus minimaliste mais sans validation ni typage natifs,
 nécessitant des dépendances supplémentaires pour obtenir des garanties équivalentes), FastAPI
 offre le meilleur compromis entre rapidité de développement et rigueur pour ce périmètre.
+
+## D20 — Docker et docker-compose pour l'environnement complet
+**Décision** : l'application est conteneurisée via un `Dockerfile` (image de l'API) et
+orchestrée avec `docker-compose.yml` (API + PostgreSQL ensemble, réseau interne,
+volume persistant pour les données).
+**Justification** : Docker garantit un environnement reproductible, indépendant du système
+d'exploitation de la machine hôte — élimine par construction les problèmes rencontrés en
+développement local (versions Python incompatibles, drivers PostgreSQL spécifiques à un OS,
+conflits de ports). Les migrations Alembic s'exécutent automatiquement au démarrage du
+conteneur API (`CMD alembic upgrade head && uvicorn ...`), garantissant un comportement
+identique entre l'environnement Docker local et le déploiement en production (étape 18).
 
 ---
 
