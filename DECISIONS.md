@@ -26,6 +26,7 @@ derrière chaque décision, pas seulement le "quoi".
 | D18 | bcrypt |
 | D19 | FastAPI |
 | D20 | Docker et docker-compose |
+| D21 | Déploiement sur Render |
 
 ---
 
@@ -172,6 +173,15 @@ développement local (versions Python incompatibles, drivers PostgreSQL spécifi
 conflits de ports). Les migrations Alembic s'exécutent automatiquement au démarrage du
 conteneur API (`CMD alembic upgrade head && uvicorn ...`), garantissant un comportement
 identique entre l'environnement Docker local et le déploiement en production (étape 18).
+
+## D21 — Déploiement sur Render
+**Décision** : l'API est déployée publiquement sur Render (Web Service + PostgreSQL managé),
+à l'URL `https://kovo-backend-test.onrender.com`.
+**Justification** : offre gratuite suffisante pour un test technique, PostgreSQL managé
+inclus nativement sans configuration serveur supplémentaire, et détection/déploiement
+automatique depuis le `Dockerfile` du dépôt — garantit que l'environnement de production
+est strictement identique à celui testé localement (D20). Les 4 endpoints ont été vérifiés
+de bout en bout directement sur l'URL publique après déploiement.
 
 ---
 
